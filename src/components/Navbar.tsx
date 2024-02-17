@@ -33,7 +33,6 @@ const Navbar: FC<NavbarProps> = ({ }) => {
             <div className='hidden px-2 py-1 sm:flex  items-center sm:pt-10 flex-row'>
                 <Link href="/" className=''>
                     HOME
-
                 </Link>
                 
                 
