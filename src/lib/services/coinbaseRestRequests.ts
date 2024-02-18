@@ -2,7 +2,7 @@
 import { TradingPairs } from "@/types/coinbase-types";
 import { AxiosResponse } from "axios";
 import { AxiosError } from 'axios';
-import useSWR from 'swr'
+// import useSWR from 'swr'
 const cryptoLib = require('crypto');
 const axios = require('axios').default;
 
@@ -89,7 +89,7 @@ export async function coinbaseRestRequest(endpoint: string) {
 }
 
 
-export const fetcher3 = (url) => {
+export const fetcher3 = (url: string) => {
     return axios.get(url).then(res => res.data)
 }
 export async function fetchProductCandles(endpoint: string) {
@@ -112,22 +112,33 @@ export async function fetchProductCandles(endpoint: string) {
 
         let ohlc = []
         let volume = []
+        let productData = []
         // console.log(`DATA: ${data}`)
+        // NOTE: highcharts requires data to be in ascending order, date, open, high, low, close
+        // coinbase responds with descending date, low, high, open, close, volume
         for (let i = 0; i < data.length; i += 1) {
-            ohlc.push([
+            ohlc.unshift([
                 data[i][0]*1000, // the date
-                data[i][1], // open
+                data[i][3], // open
                 data[i][2], // high
-                data[i][3], // low
+                data[i][1], // low
                 data[i][4] // close
             ]);
 
-            volume.push([
+            volume.unshift([
                 data[i][0]*1000, // the date
                 data[i][5] // the volume
             ]);
+            productData.unshift([
+                data[i][0]*1000, // the date
+                data[i][3], // open
+                data[i][2], // high
+                data[i][1], // low
+                data[i][4], // close
+                data[i][5] // the volume
+            ]);
         }
-        return { 'productOhlc': ohlc, 'productVolume': volume }
+        return { 'productData': productData, 'productOhlc': ohlc, 'productVolume': volume }
 
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -186,18 +197,6 @@ export function createWebsocketQueryParams() {
         // if we cant find the api keys return an empty dict == no authentication
         console.log("CANT AUTHENTICATE")
         return {}
-    }
-
-}
-
-
-export const fetchTest = () => {
-    const fetcher = url => axios.get(url).then(res => res.data)
-    const { data, error, isLoading } = useSWR(`https://demo-live-data.highcharts.com/aapl-ohlcv.json`, fetcher)
-    return {
-        user: data,
-        isLoading,
-        isError: error
     }
 
 }

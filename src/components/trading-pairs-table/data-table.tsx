@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
                     className="max-w-sm text-black bg-white"
                 />
             </div>
-            <div className="rounded-md border flex overflow-auto">
+            <div className="rounded-md border flex">
                 <Table className="">
                     <TableHeader className="">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -93,7 +93,7 @@ export function DataTable<TData, TValue>({
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="overflow-scroll">
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow

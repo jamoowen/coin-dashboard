@@ -6,6 +6,8 @@ import { fetchProductCandles, fetcher3, productCandleFetcher } from '@/lib/servi
 import useSWR from 'swr'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // addFunnel = require('highcharts/modules/funnel');
 
@@ -14,12 +16,11 @@ import { Button } from '@/components/ui/button'
 
 interface TickerChartProps {
     productId: string
-    candleData: any
+    
 }
 
 
-
-const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
+const TickerChart: FC<TickerChartProps> = ({ productId }) => {
     const baseCurrency = productId.split('-')[0];
     const quoteCurrency = productId.split('-')[1];
 
@@ -32,22 +33,16 @@ const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
         "1 day": 86400
     }
 
-    const [timeInterval, setTimeInterval] = useState(timeIntervals['1 hour'])
-    const [chartData, setChartData] = useState('')
-    const [chartOhlc, setChartOhlc] = useState('')
-    const [chartVol, setChartVol] = useState('')
-    console.log(timeInterval)
+    const [timeInterval, setTimeInterval] = useState(timeIntervals['1 day'])
+    const [chartData, setChartData] = useState()
+    const [chartData2, setChartData2] = useState()
+    const [chartOhlc, setChartOhlc] = useState()
+    const [chartVol, setChartVol] = useState()
+    const [isLoading, setIsLoading] = useState(false)
+    const [chartType, setChartType] = useState('candlestick')
+    // console.log(timeInterval)
     // const fetcher = url => axios.get(`https://api-public.sandbox.exchange.coinbase.com${url}`).then(res => res.data)
     // const { data, error, isLoading } = useSWR(`/products/${productId}/candles?granularity=${timeInterval}`, fetchProductCandles)
-
-
-
-    // const fetcher = url => axios.get(url).then(res => res.data)
-    // const { data, error, isLoading } = useSWR(`https://demo-live-data.highcharts.com/aapl-ohlcv.json`, fetcher)
-
-
-    // console.log(isLoading)
-
 
 
 
@@ -61,40 +56,14 @@ const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
     // ).then(response => response.json());
 
 
-    // split the data set into ohlc and volume
-
-
-    // if (!isLoading) {
-    //     let ohlc = []
-    //     let volume = []
-    //     // console.log(`DATA: ${data}`)
-    //     for (let i = 0; i < data.length; i += 1) {
-    //         ohlc.push([
-    //             data[i][0], // the date
-    //             data[i][1], // open
-    //             data[i][2], // high
-    //             data[i][3], // low
-    //             data[i][4] // close
-    //         ]);
-
-    //         volume.push([
-    //             data[i][0], // the date
-    //             data[i][5] // the volume
-    //         ]);
-    //     }
-    //     setChartData(ohlc);
-    //     // setChartVol(volume);
-    //     console.log(`SETTING: ${ohlc[0]}`)
-    // }
-
     // set the allowed units for data grouping
     const groupingUnits = [[
         'hour',                         // unit name
         [1]                             // allowed multiples
-    ],[
+    ], [
         'day',                         // unit name
         [1]                             // allowed multiples
-    ],[
+    ], [
         'week',                         // unit name
         [1]                             // allowed multiples
     ], [
@@ -117,17 +86,29 @@ const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
                 type: 'day',
                 count: 1,
                 text: '1D'
-            }, {
+            },{
+                type: 'week',
+                count: 1,
+                text: '1w'
+            },{
+                type: 'month',
+                count: 1,
+                text: '1m'
+            },{
+                type: 'month',
+                count: 3,
+                text: '3m'
+            },{
                 type: 'all',
                 count: 1,
                 text: 'All'
             }],
-            selected: 1,
-            inputEnabled: false
+            selected: 5,
+            inputEnabled: true
         },
 
         title: {
-            text: timeInterval
+            text: `${productId} Historical`
         },
 
         yAxis: [{
@@ -136,7 +117,7 @@ const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
                 x: -3
             },
             title: {
-                text: '-'
+                text: 'OHLC'
             },
             height: '60%',
             lineWidth: 2,
@@ -161,107 +142,104 @@ const TickerChart: FC<TickerChartProps> = ({ productId, candleData }) => {
             split: true
         },
 
-        series: [{
-            type: 'candlestick',
-            name: '-',
-            data: chartOhlc,
-            
-        }, {
-            type: 'column',
-            name: 'Volume',
-            data: chartVol,
-            yAxis: 1,
-            
-        }]
     });
 
     useEffect(() => {
-
+        setIsLoading(true)
         const fetchTest = async () => {
             const fetcher = url => axios.get(url).then(res => res.data)
             // const fetcher2 = url => axios.get(url).then(res => res.data)
-            const { productOhlc, productVolume } = await fetchProductCandles(`/products/BTC-USD/candles?granularity=86400`)
+            const { productData, productOhlc, productVolume } = await fetchProductCandles(`/products/${productId}/candles?granularity=${timeInterval}&start=1645108200000`)
+            setChartData(productData)
+            setChartOhlc(productOhlc)
+            setChartVol(productVolume)
             // const realData = await fetcher3('https://api-public.sandbox.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600')
+            // 1645108200000
+            // 1678233600000
 
+            const data = await fetcher('https://demo-live-data.highcharts.com/aapl-ohlcv.json')
 
-
-            // const data = await fetcher('https://demo-live-data.highcharts.com/aapl-ohlcv.json')
-            
-            // let ohlc = []
-            // let volume = []
-            // // console.log(`DATA: ${data}`)
-            // for (let i = 0; i < data.length; i += 1) {
-            //     ohlc.push([
-            //         data[i][0], // the date
-            //         data[i][1], // open
-            //         data[i][2], // high
-            //         data[i][3], // low
-            //         data[i][4] // close
-            //     ]);
-
-            //     volume.push([
-            //         data[i][0], // the date
-            //         data[i][5] // the volume
-            //     ]);
-            // }
-            // console.log(`TESTDATA: ${ohlc.length}`)
-            console.log(`Actualdata: ${productVolume}`)
+            // console.log(`TESTDATA: ${ohlc[0]}`)
+            // console.log(`Actualdata length: ${productData.length} data1: ${productData[0]} dataend: ${productData[productData.length-1]}`)
+            // console.log(`Actualdata: ${productOhlc}`)
 
             setChartOptions({
                 series: [{
-                    type: 'candlestick',
+                    type: chartType,
                     name: baseCurrency,
                     data: productOhlc,
-                    
+                    dataGrouping: {
+                        units: groupingUnits
+                    }
                 }, {
                     type: 'column',
                     name: 'Volume',
                     data: productVolume,
                     yAxis: 1,
-                    
-                }],
-                title: {
-                    text: timeInterval,
-                },
+                    dataGrouping: {
+                        units: groupingUnits
+                    }
+                }]
             });
             // return testData
         }
         fetchTest();
+        setIsLoading(false);
 
 
 
-
-    }, [timeInterval]);
+    }, [timeInterval, chartType]);
 
     // Load the dataset
     // 60, 300, 900, 3600, 21600, 86400 -> one minute, five minutes, fifteen minutes, one hour, six hours, and one day
 
-    return (
-
-        <div className='w-full mt-10 p-2 bg-gray-800 rounded-sm '>
-            {(false) ?
-                <div className=' h-96'>
-                    loading...
+    if (isLoading) {
+        return (
+            <div className="flex flex-col space-y-3">
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[250px]" />
                 </div>
-                : <>
-                    <div>
-                        {Object.keys(timeIntervals).map((key) => (
-                            <Button key={key} onClick={() => setTimeInterval(timeIntervals[key])}>{key}</Button>
-                        ))}
+                <Skeleton className="h-[400px] w-full rounded-xl" />
 
-                    </div>
+            </div>
+        )
+    } else if (!isLoading && chartData) {
+        return (
+            <div className='w-full mt-10 gap-5 flex flex-col p-2 bg-gray-800 rounded-sm '>
+                Ticker intervals
+                <div className='flex gap-2'>
 
+                    {Object.keys(timeIntervals).map((key) => (
+                        <Button className={`${timeInterval === timeIntervals[key] ? 'bg-white text-black hover:' : ''}`} key={key} onClick={() => setTimeInterval(timeIntervals[key])}>{key}</Button>
+                    ))}
 
-                </>}
-            <HighchartsReact
-                highcharts={Highcharts}
-                options={chartOptions}
-                constructorType="stockChart"
-                ref={chartRef}
-            />
-        </div>
+                </div>
+                <div className='flex gap-2'>
+                    <Button className={`${chartType === 'candlestick'? 'bg-white text-black hover:' : ''}`} onClick={()=>setChartType('candlestick')}>
+                        Candlestick
+                    </Button>
+                    <Button className={`${chartType != 'candlestick'? 'bg-white text-black hover:' : ''}`} onClick={()=>setChartType('line')}>
+                        Line
+                    </Button>
+                </div>
 
-    )
+                <HighchartsReact
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                    constructorType="stockChart"
+                    ref={chartRef}
+                />
+            </div>
+        )
+    } else {
+        return (
+            <div className='animate-pulse'>
+                Unable to fetch historical data for {productId}
+            </div>
+        )
+    }
+
 }
 
 export default TickerChart

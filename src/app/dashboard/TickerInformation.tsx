@@ -67,7 +67,7 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
             setVol(message.volume_24h)
             setTimeUpdated(message.time)
         } else {
-            console.log(`ERR: ${message['type']}`)
+            console.log(`ERR: ${message}`)
         }
     }
 
@@ -97,7 +97,7 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
                     </div>
                 </div>
 
-                : <div className='animate-pulse'>Cant load ticker data</div>}
+                : <div className='animate-pulse'>Unable to load live ticker data</div>}
         </div>
     )
 }
