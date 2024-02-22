@@ -1,7 +1,7 @@
 'use client'
 import { FC, useEffect, useRef, useState } from 'react'
 import Highcharts from 'highcharts/highstock'
-import HighchartsReact from 'highcharts-react-official'
+import HighchartsReact, { HighchartsReactRefObject } from 'highcharts-react-official'
 import { fetchProductCandles } from '@/lib/services/coinbaseRestRequests'
 import useSWR from 'swr'
 import axios from 'axios'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, RefreshCcw } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'next/navigation'
+import { ValueOf } from 'next/dist/shared/lib/constants'
 
 
 
@@ -40,47 +41,43 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
         21600: 4,
         86400: 4,
     }
+    type TimeInterval = typeof timeIntervals[keyof typeof timeIntervals];
 
-    const [timeInterval, setTimeInterval] = useState<number>(timeIntervals['1 day'])
+    const [timeInterval, setTimeInterval] = useState<TimeInterval>(timeIntervals['1 day']);
+
     const [chartData, setChartData] = useState<boolean>(true)
     const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [chartType, setChartType] = useState<string>('line')
+    const [chartType, setChartType] = useState<'line' | 'candlestick'>('line')
     const [reloadTrigger, setReloadTrigger] = useState<boolean>(false)
 
     // 60, 300, 900, 3600, 21600, 86400 -> one minute, five minutes, fifteen minutes, one hour, six hours, and one day
-    const chartRef = useRef();
+    // const chartRef = useRef();
+    const chartRef = useRef<HighchartsReactRefObject | null>(null);
 
 
     // CHART CONFIG set the allowed units for data grouping
-    const groupingUnits = [[
-        'minute',                         // unit name
-        [1, 5, 15]                             // allowed multiples
-    ], [
-        'hour',                         // unit name
-        [1]                             // allowed multiples
-    ], [
-        'day',                         // unit name
-        [1]                             // allowed multiples
-    ], [
-        'week',                         // unit name
-        [1]                             // allowed multiples
-    ], [
-        'month',
-        [1, 2, 3, 4, 6]
-    ]];
+    const groupingUnits: Array<[string, number[] | null]> = [
+        ['minute', [1, 5, 15]],
+        ['hour', [1]],
+        ['day', [1]],
+        ['week', [1]],
+        ['month', [1, 2, 3, 4, 6]]
+    ];
+    
 
     // CHART CONFIG kept in state
     // the this.reflow is used to fix bug when resizing page -> reflow resizes the chart to its parent div
-    const [chartOptions, setChartOptions] = useState({
+    const [chartOptions, setChartOptions] = useState<Highcharts.Options>({
         chart: {
             style: {
                 overflow: 'auto',
             },
             events: {
                 load() {
-                    console.log("before reflow");
+                    // console.log("before reflow");
+                    // @ts-ignore
                     this.reflow();
-                    console.log("after reflow");
+                    // console.log("after reflow");
                 }
             }
         },
@@ -110,9 +107,9 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                 title: {
                     text: `${productId} Historical`
                 },
-                style: {
-                    overflow: 'auto'
-                },
+                // style: {
+                //     overflow: 'auto'
+                // },
                 chart: {
                     style: {
                         overflow: 'auto',
@@ -120,9 +117,10 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                     },
                     events: {
                         load() {
-                            console.log("before reflow");
+                            // console.log("before reflow");
+                            // @ts-ignore
                             this.reflow();
-                            console.log("after reflow");
+                            // console.log("after reflow");
                         }
                     }
                 },
@@ -208,7 +206,7 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
             });
             // return testData
             productOhlc && (productOhlc?.length > 1) ? setChartData(true) : setChartData(false);
-            
+
 
 
         }
@@ -242,14 +240,20 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                             <span className='mt-2 ml-1'>Ticker intervals</span>
                             <div className='grid grid-cols-4 py-2 sm:flex gap-2'>
 
-                                {Object.keys(timeIntervals).map((key) => (
-                                    <Button className={`${timeInterval === timeIntervals[key] ? 'bg-white text-black hover:' : ''}`} key={key} onClick={() => setTimeInterval(timeIntervals[key])}>{key}</Button>
+                                {Object.entries(timeIntervals).map(([key, value]) => (
+                                    <Button
+                                        className={`${timeInterval === value ? 'bg-white text-black hover:' : ''}`}
+                                        key={key}
+                                        onClick={() => setTimeInterval(value)}
+                                    >
+                                        {key}
+                                    </Button>
                                 ))}
 
                             </div>
                             <span className='mt-2 ml-1'>Chart type</span>
                             <div className='flex gap-2 py-2'>
-                            
+
                                 <Button className={`${chartType === 'candlestick' ? 'bg-white text-black hover:' : ''}`} onClick={() => setChartType('candlestick')}>
                                     Candlestick
                                 </Button>
@@ -258,7 +262,7 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                                 </Button>
                             </div>
                             <div className='flex'>
-                                <Button onClick={()=>setReloadTrigger(!reloadTrigger)} className='hover:bg-white rounded-none hover:text-gray-900'>
+                                <Button onClick={() => setReloadTrigger(!reloadTrigger)} className='hover:bg-white rounded-none hover:text-gray-900'>
                                     <RefreshCcw className='' />
                                 </Button>
                             </div>
@@ -277,7 +281,7 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                                 ref={chartRef}
                                 style="overflow: auto"
                                 containerProps={{ className: 'overflow-auto xl:w-[1200px] lg:w-[1000px] md:w-[800px] sm:w-[600px] w-[500px]' }}
-                            // callback = { setTimeout(this.reflow.bind(this), 0) }
+
 
 
                             />

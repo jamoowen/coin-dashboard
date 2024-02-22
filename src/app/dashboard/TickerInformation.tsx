@@ -46,13 +46,13 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
         lastMessage,
         readyState
     } = useWebSocket(wss_url, {
-        onOpen: () => console.log('WebSocket connection opened.'),
-        onClose: () => console.log('WebSocket connection closed.'),
+        // onOpen: () => console.log('WebSocket connection opened.'),
+        // onClose: () => console.log('WebSocket connection closed.'),
         shouldReconnect: (closeEvent) => false,
         // onMessage: (event: WebSocketEventMap['message']) => console.log(event.data)
         onMessage: (event: WebSocketEventMap['message']) => handleMessage(JSON.parse(event.data))
     });
-    console.log(`subscribing...`)
+    // console.log(`subscribing...`)
     sendJsonMessage(subscribeMessage);
 
     
@@ -67,7 +67,7 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
             setVol(message.volume_24h)
             setTimeUpdated(message.time)
         } else {
-            console.log(`ERR: ${JSON.stringify(message)}`)
+            // console.log(`ERR: ${JSON.stringify(message)}`)
         }
     }
 

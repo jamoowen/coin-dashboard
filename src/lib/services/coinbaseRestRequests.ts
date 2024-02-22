@@ -174,7 +174,8 @@ export async function fetchTradingPairs() {
         if (!apiResponse) {
             throw new Error
         }
-        const extractedData = apiResponse.data.map(({ id, base_currency, quote_currency, display_name }) => ({ id, base_currency, quote_currency, display_name }));
+        const extractedData = apiResponse.data.map(({ id, base_currency, quote_currency, display_name }: { id: string; base_currency: string; quote_currency: string; display_name: string }) => ({ id, base_currency, quote_currency, display_name }));
+        
         return extractedData;
 
     } catch (error: unknown) {
@@ -210,7 +211,7 @@ export function createWebsocketQueryParams() {
         return authenticatedHeaders
     } else {
         // if we cant find the api keys return an empty dict == no authentication
-        console.log("Cant authenticate websocket...")
+        // console.log("Cant authenticate websocket...")
         return {}
     }
 
