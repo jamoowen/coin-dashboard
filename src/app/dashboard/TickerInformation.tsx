@@ -48,7 +48,7 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
     } = useWebSocket(wss_url, {
         // onOpen: () => console.log('WebSocket connection opened.'),
         // onClose: () => console.log('WebSocket connection closed.'),
-        shouldReconnect: (closeEvent) => false,
+        shouldReconnect: (closeEvent) => true,
         // onMessage: (event: WebSocketEventMap['message']) => console.log(event.data)
         onMessage: (event: WebSocketEventMap['message']) => handleMessage(JSON.parse(event.data))
     });
