@@ -2,25 +2,25 @@
 import { FC, useEffect, useRef, useState } from 'react'
 import Highcharts from 'highcharts/highstock'
 import HighchartsReact from 'highcharts-react-official'
-import { fetchProductCandles, fetcher3, productCandleFetcher } from '@/lib/services/coinbaseRestRequests'
+import { fetchProductCandles } from '@/lib/services/coinbaseRestRequests'
 import useSWR from 'swr'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, RefreshCcw } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useRouter } from 'next/navigation'
 
-// addFunnel = require('highcharts/modules/funnel');
 
-// const Highcharts = require('highcharts');
 
 
 interface TickerChartProps {
     productId: string
-    
+
 }
 
 
 const TickerChart: FC<TickerChartProps> = ({ productId }) => {
+    const router = useRouter()
     const baseCurrency = productId.split('-')[0];
     const quoteCurrency = productId.split('-')[1];
 
@@ -32,32 +32,30 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
         "6 hours": 21600,
         "1 day": 86400
     }
+    const rangeMapping = {
+        60: 0,
+        300: 1,
+        900: 1,
+        3600: 2,
+        21600: 4,
+        86400: 4,
+    }
 
-    const [timeInterval, setTimeInterval] = useState(timeIntervals['1 day'])
-    const [chartData, setChartData] = useState()
-    const [chartData2, setChartData2] = useState()
-    const [chartOhlc, setChartOhlc] = useState()
-    const [chartVol, setChartVol] = useState()
-    const [isLoading, setIsLoading] = useState(false)
-    const [chartType, setChartType] = useState('candlestick')
-    // console.log(timeInterval)
-    // const fetcher = url => axios.get(`https://api-public.sandbox.exchange.coinbase.com${url}`).then(res => res.data)
-    // const { data, error, isLoading } = useSWR(`/products/${productId}/candles?granularity=${timeInterval}`, fetchProductCandles)
+    const [timeInterval, setTimeInterval] = useState<number>(timeIntervals['1 day'])
+    const [chartData, setChartData] = useState<boolean>(true)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [chartType, setChartType] = useState<string>('line')
+    const [reloadTrigger, setReloadTrigger] = useState<boolean>(false)
 
-
-
-    // const chartData = fetchProductCandles('ETH')
     // 60, 300, 900, 3600, 21600, 86400 -> one minute, five minutes, fifteen minutes, one hour, six hours, and one day
     const chartRef = useRef();
 
 
-    // const testData = await fetch(
-    //     'https://demo-live-data.highcharts.com/aapl-ohlcv.json'
-    // ).then(response => response.json());
-
-
-    // set the allowed units for data grouping
+    // CHART CONFIG set the allowed units for data grouping
     const groupingUnits = [[
+        'minute',                         // unit name
+        [1, 5, 15]                             // allowed multiples
+    ], [
         'hour',                         // unit name
         [1]                             // allowed multiples
     ], [
@@ -71,99 +69,126 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
         [1, 2, 3, 4, 6]
     ]];
 
-
-
-
-    // console.log(`TEST DATA: ${testData}`)
+    // CHART CONFIG kept in state
+    // the this.reflow is used to fix bug when resizing page -> reflow resizes the chart to its parent div
     const [chartOptions, setChartOptions] = useState({
-
-        rangeSelector: {
-            buttons: [{
-                type: 'hour',
-                count: 1,
-                text: '1h'
-            }, {
-                type: 'day',
-                count: 1,
-                text: '1D'
-            },{
-                type: 'week',
-                count: 1,
-                text: '1w'
-            },{
-                type: 'month',
-                count: 1,
-                text: '1m'
-            },{
-                type: 'month',
-                count: 3,
-                text: '3m'
-            },{
-                type: 'all',
-                count: 1,
-                text: 'All'
-            }],
-            selected: 5,
-            inputEnabled: true
-        },
-
-        title: {
-            text: `${productId} Historical`
-        },
-
-        yAxis: [{
-            labels: {
-                align: 'right',
-                x: -3
+        chart: {
+            style: {
+                overflow: 'auto',
             },
-            title: {
-                text: 'OHLC'
-            },
-            height: '60%',
-            lineWidth: 2,
-            resize: {
-                enabled: true
+            events: {
+                load() {
+                    console.log("before reflow");
+                    this.reflow();
+                    console.log("after reflow");
+                }
             }
-        }, {
-            labels: {
-                align: 'right',
-                x: -3
-            },
-            title: {
-                text: 'Volume'
-            },
-            top: '65%',
-            height: '35%',
-            offset: 0,
-            lineWidth: 2
-        }],
-
-        tooltip: {
-            split: true
         },
 
     });
 
+    // data is fetched within the use effect. the time interval and chart type are dependencies, meaning the data will be refetched when one of those is changed
+    // You are able to select the time interval you want, and the type of chart (line/candlestick) but I have not allowed custom ranges as the coinbase api returns a maximum of 300 product candles
+    // More logic is needed to allow for this
     useEffect(() => {
         setIsLoading(true)
         const fetchTest = async () => {
-            const fetcher = url => axios.get(url).then(res => res.data)
-            // const fetcher2 = url => axios.get(url).then(res => res.data)
-            const { productData, productOhlc, productVolume } = await fetchProductCandles(`/products/${productId}/candles?granularity=${timeInterval}&start=1645108200000`)
-            setChartData(productData)
-            setChartOhlc(productOhlc)
-            setChartVol(productVolume)
-            // const realData = await fetcher3('https://api-public.sandbox.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600')
-            // 1645108200000
-            // 1678233600000
 
-            const data = await fetcher('https://demo-live-data.highcharts.com/aapl-ohlcv.json')
+            const dataDict = await fetchProductCandles(`/products/${productId}/candles?granularity=${timeInterval}&start=`)
+            const productData = dataDict?.productData
+            const productOhlc = dataDict?.productOhlc
+            const productVolume = dataDict?.productVolume
+
+            // console.log(`latest date:: ${new Date(productOhlc[productOhlc.length-1][0])}`)
 
             // console.log(`TESTDATA: ${ohlc[0]}`)
             // console.log(`Actualdata length: ${productData.length} data1: ${productData[0]} dataend: ${productData[productData.length-1]}`)
             // console.log(`Actualdata: ${productOhlc}`)
 
+            // once the data has been fetched, we must update the chart
             setChartOptions({
+                title: {
+                    text: `${productId} Historical`
+                },
+                style: {
+                    overflow: 'auto'
+                },
+                chart: {
+                    style: {
+                        overflow: 'auto',
+
+                    },
+                    events: {
+                        load() {
+                            console.log("before reflow");
+                            this.reflow();
+                            console.log("after reflow");
+                        }
+                    }
+                },
+
+                rangeSelector: {
+                    buttons: [{
+                        type: 'hour',
+                        count: 1,
+                        text: '1h'
+                    }, {
+                        type: 'day',
+                        count: 1,
+                        text: '1D'
+                    }, {
+                        type: 'week',
+                        count: 1,
+                        text: '1w'
+                    }, {
+                        type: 'month',
+                        count: 1,
+                        text: '1m'
+                    }, {
+                        type: 'month',
+                        count: 3,
+                        text: '3m'
+                    }, {
+                        type: 'all',
+                        text: 'All',
+                        title: 'View all'
+                    }],
+                    selected: 5,
+                    inputEnabled: true
+                },
+
+                yAxis: [{
+                    labels: {
+                        align: 'right',
+                        x: -3
+                    },
+                    title: {
+                        text: `Price (${quoteCurrency})`
+                    },
+                    height: '60%',
+                    lineWidth: 2,
+                    resize: {
+                        enabled: true
+                    }
+                }, {
+                    labels: {
+                        align: 'right',
+                        x: -3
+                    },
+                    title: {
+                        text: 'Volume'
+                    },
+                    top: '65%',
+                    height: '35%',
+                    offset: 0,
+                    lineWidth: 2
+                }],
+
+                tooltip: {
+                    split: true
+                },
+
+
                 series: [{
                     type: chartType,
                     name: baseCurrency,
@@ -179,66 +204,91 @@ const TickerChart: FC<TickerChartProps> = ({ productId }) => {
                     dataGrouping: {
                         units: groupingUnits
                     }
-                }]
+                }],
             });
             // return testData
+            productOhlc && (productOhlc?.length > 1) ? setChartData(true) : setChartData(false);
+            
+
+
         }
+
+
         fetchTest();
         setIsLoading(false);
 
 
-
-    }, [timeInterval, chartType]);
+    }, [timeInterval, chartType, reloadTrigger]);
 
     // Load the dataset
     // 60, 300, 900, 3600, 21600, 86400 -> one minute, five minutes, fifteen minutes, one hour, six hours, and one day
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col space-y-3">
-                <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[250px]" />
-                </div>
-                <Skeleton className="h-[400px] w-full rounded-xl" />
-
-            </div>
-        )
-    } else if (!isLoading && chartData) {
-        return (
-            <div className='w-full mt-10 gap-5 flex flex-col p-2 bg-gray-800 rounded-sm '>
-                Ticker intervals
-                <div className='flex gap-2'>
-
-                    {Object.keys(timeIntervals).map((key) => (
-                        <Button className={`${timeInterval === timeIntervals[key] ? 'bg-white text-black hover:' : ''}`} key={key} onClick={() => setTimeInterval(timeIntervals[key])}>{key}</Button>
-                    ))}
+    return (
+        <>
+            {isLoading ?
+                <div className="flex mt-5 flex-col space-y-3">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[250px]" />
+                    </div>
+                    <Skeleton className="h-[400px] w-full rounded-xl" />
 
                 </div>
-                <div className='flex gap-2'>
-                    <Button className={`${chartType === 'candlestick'? 'bg-white text-black hover:' : ''}`} onClick={()=>setChartType('candlestick')}>
-                        Candlestick
-                    </Button>
-                    <Button className={`${chartType != 'candlestick'? 'bg-white text-black hover:' : ''}`} onClick={()=>setChartType('line')}>
-                        Line
-                    </Button>
-                </div>
+                :
+                <>
 
-                <HighchartsReact
-                    highcharts={Highcharts}
-                    options={chartOptions}
-                    constructorType="stockChart"
-                    ref={chartRef}
-                />
-            </div>
-        )
-    } else {
-        return (
-            <div className='animate-pulse'>
-                Unable to fetch historical data for {productId}
-            </div>
-        )
-    }
+                    <div className='mt-10 flex flex-col  px-2  mb-10 bg-gray-800 rounded-sm '>
+                        {chartData ? <>
+                            <span className='mt-2 ml-1'>Ticker intervals</span>
+                            <div className='grid grid-cols-4 py-2 sm:flex gap-2'>
+
+                                {Object.keys(timeIntervals).map((key) => (
+                                    <Button className={`${timeInterval === timeIntervals[key] ? 'bg-white text-black hover:' : ''}`} key={key} onClick={() => setTimeInterval(timeIntervals[key])}>{key}</Button>
+                                ))}
+
+                            </div>
+                            <span className='mt-2 ml-1'>Chart type</span>
+                            <div className='flex gap-2 py-2'>
+                            
+                                <Button className={`${chartType === 'candlestick' ? 'bg-white text-black hover:' : ''}`} onClick={() => setChartType('candlestick')}>
+                                    Candlestick
+                                </Button>
+                                <Button className={`${chartType != 'candlestick' ? 'bg-white text-black hover:' : ''}`} onClick={() => setChartType('line')}>
+                                    Line
+                                </Button>
+                            </div>
+                            <div className='flex'>
+                                <Button onClick={()=>setReloadTrigger(!reloadTrigger)} className='hover:bg-white rounded-none hover:text-gray-900'>
+                                    <RefreshCcw className='' />
+                                </Button>
+                            </div>
+                        </> :
+                            <div className=' '>
+                                <span className='text-2xl text-red-500'>Error!</span> <br />Unable to load historical data for {productId} <br /> Try selecting a different asset
+                            </div>
+                        }
+
+                        <div className='flex overflow-auto  h-[300px] sm:h-[500px]'>
+                            <HighchartsReact
+
+                                highcharts={Highcharts}
+                                options={chartOptions}
+                                constructorType="stockChart"
+                                ref={chartRef}
+                                style="overflow: auto"
+                                containerProps={{ className: 'overflow-auto xl:w-[1200px] lg:w-[1000px] md:w-[800px] sm:w-[600px] w-[500px]' }}
+                            // callback = { setTimeout(this.reflow.bind(this), 0) }
+
+
+                            />
+                        </div>
+
+                    </div>
+                </>
+            }
+        </>
+    )
+
 
 }
 

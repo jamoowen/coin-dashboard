@@ -6,7 +6,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
 
 
-import { ArrowBigRight, Menu, X } from 'lucide-react';
+import { ArrowBigRight, Home, Menu, X } from 'lucide-react';
 
 
 interface NavbarProps {
@@ -14,8 +14,8 @@ interface NavbarProps {
 }
 
 const navbarLinks = {
-    products: {
-        name: 'Dashboard',
+    home: {
+        name: 'Home',
         link: '/'
     },
 
@@ -31,11 +31,11 @@ const Navbar: FC<NavbarProps> = ({ }) => {
         <nav className="fixed z-30 top-0 left-0 mr-5 font-semibold items-center bg-black flex flex-row w-full text-white shrink-0 bg-background">
 
             <div className='hidden px-2 py-1 sm:flex  items-center sm:pt-10 flex-row'>
-                <Link href="/" className=''>
-                    HOME
+                <Link href="/" className='flex items-center justify-center flex-row gap-2'>
+                    <Home /> 
                 </Link>
-                
-                
+
+
 
                 <div className='ml-5 gap-5  text-slate-200  flex w-full'>
                     {
@@ -44,7 +44,7 @@ const Navbar: FC<NavbarProps> = ({ }) => {
                                 key={key}
                                 href={value.link}
                                 className='hover:underline hover:text-white font-semibold leading-0 underline-offset-4 decoration-underlineColor'
-                                
+
                             >
                                 {value.name}
                             </Link>
@@ -57,17 +57,16 @@ const Navbar: FC<NavbarProps> = ({ }) => {
                 <div className='grid w-full grid-cols-3 z-10 relative py-4 items-center'>
                     <div className='col-span-1 flex items-center'>
 
-                    <button className=' ' onClick={() => setOpen((x) => !x)}>
-                           {!open?<Menu /> :<X/>} 
+                        <button className=' ' onClick={() => setOpen((x) => !x)}>
+                            {!open ? <Menu /> : <X />}
                         </button>
                     </div>
-                
-                    <div className='col-span- flex items-center justify-center '>
-                      
-                        
-                        <Link href="/" >
-                            HOME
 
+                    <div className='col-span- flex items-center justify-center '>
+
+
+                        <Link href="/" className='flex items-center justify-center flex-row gap-2'>
+                            <Home /> Home
                         </Link>
                     </div>
                 </div>
@@ -122,9 +121,9 @@ const Navbar: FC<NavbarProps> = ({ }) => {
                                             </Transition.Child>
                                             <div className="flex  h-full flex-col overflow-y-scroll bg-black text-white  shadow-xl">
                                                 <div className="flex mt-14 flex-col">
-                                                    
+
                                                     <ul>
-                                                        
+
                                                         {
                                                             Object.entries(navbarLinks).map(([key, value]) => (
                                                                 <li key={value.name} className='w-full flex flex-row border-b py-5 px-2 border-gray-500'>
@@ -132,12 +131,12 @@ const Navbar: FC<NavbarProps> = ({ }) => {
                                                                         key={key}
                                                                         href={value.link}
                                                                         className='hover:underline hover:text-white flex justify-between w-full font-semibold underline-offset-4 decoration-underlineColor'
-                                                                        onClick={()=>setOpen(false)}
+                                                                        onClick={() => setOpen(false)}
                                                                     >
                                                                         {value.name}
                                                                         <ArrowBigRight className='text-gold' />
                                                                     </Link>
-                                                                    
+
                                                                 </li>
                                                             ))
                                                         }

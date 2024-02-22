@@ -23,7 +23,7 @@ export default async function Page() {
 
           <div className='  w-full flex'>
 
-            <div className='  p-5 bg-blend-color gap-5 items-center flex flex-col  opacity  min-h-screen  grow '>
+            <div className=' p-2 sm:p-5 bg-blend-color gap-5 justify-center items-center flex flex-col  opacity  min-h-screen  grow '>
             <span className='text-4xl sm:text-7xl cursor-default mt-10 text-white'>Coin Explorer</span>
               
              {
@@ -32,19 +32,11 @@ export default async function Page() {
               
 
              }
-              {/* {data.map((coin)=> (
-                <li id="coin">{JSON.stringify(coin)}</li>
-              ))} */}
+          
             </div>
           </div>
         </div>
         
-
-        
-
-
-
-
       </div>
 
     </main>

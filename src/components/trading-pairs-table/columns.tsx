@@ -65,9 +65,9 @@ export const columns: ColumnDef<TradingPairs>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-                        <Link href={`/dashboard?id=${row.original.id}`} >
-                            <DropdownMenuItem className="cursor-pointer" onClick={() => { console.log(`token pair: ${row.id}`) }}>View Token Pair</DropdownMenuItem>
-                        </Link>
+                        <a href={`/dashboard?id=${row.original.id}`} >
+                            <DropdownMenuItem className="cursor-pointer" >View Token Pair</DropdownMenuItem>
+                        </a>
                         {/* <Link href={`/dashboard?id=${row.original.base_currency}`}>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => { console.log(`Base Currency: ${row.original.base_currency}`) }}>View Base Token</DropdownMenuItem>
                         </Link>

@@ -8,7 +8,6 @@ import useWebSocket from 'react-use-websocket';
 interface WebSocketComponentProps {
     initialTickerData: TickerData | undefined
     productId: string
-
 }
 
 
@@ -53,27 +52,24 @@ const TickerInformation: FC<WebSocketComponentProps> = ({ productId, initialTick
         // onMessage: (event: WebSocketEventMap['message']) => console.log(event.data)
         onMessage: (event: WebSocketEventMap['message']) => handleMessage(JSON.parse(event.data))
     });
+    console.log(`subscribing...`)
     sendJsonMessage(subscribeMessage);
 
     
 
     const handleMessage = (message: TickerWebsocketData) => {
         if (message['type'] === 'ticker') {
-            console.log(`Updating prices...`)
-            console.log(`Initial price: ${initialTickerData?.price}, Socket price: ${message.price}`)
+            // console.log(`Updating prices...`)
+            // console.log(`Initial price: ${initialTickerData?.price}, Socket price: ${message.price}`)
             setAsk(message.best_ask)
             setBid(message.best_bid)
             setPrice(message.price)
             setVol(message.volume_24h)
             setTimeUpdated(message.time)
         } else {
-            console.log(`ERR: ${message}`)
+            console.log(`ERR: ${JSON.stringify(message)}`)
         }
     }
-
-
-
-
 
     return (
         <div>
