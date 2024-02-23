@@ -1,4 +1,6 @@
-This app pulls live coin data from the coinbase api and displays in an interactive dashboard
+This app pulls live coin data from the coinbase api and displays in an interactive dashboard.
+This app was made using NextJs, Typescript,  Highcharts stock, Axios,  Vitest, ShadcnUi, HeadlessUI, Lucide 
+The app is currently deployed to: https://coin-dashboard-iota.vercel.app/
 
 ## Getting Started
 You can view the dashboard in action via https://coin-dashboard-iota.vercel.app/
